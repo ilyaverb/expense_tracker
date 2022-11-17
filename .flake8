@@ -1,0 +1,4 @@
+[flake8]
+exclude = .git, .gitignore, __pycache__, venv, .env, *migrations*
+max-line-length = 119
+per-file-ignores = apps.py:F401
