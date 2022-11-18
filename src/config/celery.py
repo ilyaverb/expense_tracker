@@ -1,18 +1,19 @@
-from django.conf import settings
+import os
 
 from celery import Celery
 from celery.schedules import crontab
 
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.base')
 
-app = Celery('Expense accounting manager')
+app = Celery('expense_tracker')
 
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
-app.conf.beat_schedule = {
-    'send-statistics-every-day-at-8-am': {
-        'task': 'api.core.tasks.send_statistics',
-        'schedule': crontab(hour=8, minute=0)
-    }
-}
+app.autodiscover_tasks()
 
-app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
+app.conf.beat_schedule = {
+    'send-statistics-every-1-minute': {
+        'task': 'expense_tracker.core.tasks.send_statistics',
+        'schedule': crontab(minute='*/1'),
+    },
+}
