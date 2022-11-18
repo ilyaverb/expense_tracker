@@ -1,19 +1,24 @@
 import os
 
+from django.conf import settings
+
 from celery import Celery
 from celery.schedules import crontab
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.base')
 
-app = Celery('expense_tracker')
+app = Celery('config')
 
-app.config_from_object('django.conf:settings', namespace='CELERY')
+app.conf.enable_utc = False
 
-app.autodiscover_tasks()
+app.config_from_object(settings, namespace='CELERY')
+
 
 app.conf.beat_schedule = {
-    'send-statistics-every-1-minute': {
+    'send-statistics-every-day': {
         'task': 'expense_tracker.core.tasks.send_statistics',
-        'schedule': crontab(minute='*/1'),
+        'schedule': crontab(hour=0, minute=0),
     },
 }
+
+app.autodiscover_tasks()

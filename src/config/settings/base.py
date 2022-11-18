@@ -24,7 +24,6 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'drf_yasg',
     'django_filters',
-    'django_celery_beat',
 
     'expense_tracker.authentication',
     'expense_tracker.core',
@@ -123,7 +122,12 @@ SWAGGER_SETTINGS = {
     }
 }
 
-EMAIL_CONFIG = env.email()
+EMAIL_CONFIG = env.email(backend='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = EMAIL_CONFIG['EMAIL_HOST']
+EMAIL_USE_TLS = EMAIL_CONFIG['EMAIL_USE_TLS']
+EMAIL_HOST_USER = EMAIL_CONFIG['EMAIL_HOST_USER']
+EMAIL_HOST_PASSWORD = EMAIL_CONFIG['EMAIL_HOST_PASSWORD']
+EMAIL_PORT = EMAIL_CONFIG['EMAIL_PORT']
 
 REDIS_CONFIG = env('REDIS_URL')
 
