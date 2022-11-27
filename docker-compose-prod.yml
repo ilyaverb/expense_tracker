@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  web:
+    build:
+      context: .
+    restart: always
+    volumes:
+      - static_data:/vol/web
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE}
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15.1-alpine
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+
+  nginx:
+    build:
+      context: ./nginx
+    restart: always
+    volumes:
+      - static_data:/vol/static
+    ports:
+      - 80:8000
+    depends_on:
+      - web
+
+  redis:
+    image: redis:latest
+    ports:
+      - 6379:6379
+
+  celery:
+    restart: always
+    build:
+      context: .
+    depends_on:
+      - redis
+
+  celery-beat:
+    build:
+      context: .
+    depends_on:
+      - celery
+
+
+volumes:
+  postgres_data:
+  static_data:
+
