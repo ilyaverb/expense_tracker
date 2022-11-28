@@ -46,12 +46,20 @@ services:
     restart: always
     build:
       context: .
+    command: celery -A config worker --pool=solo -l info
+    volumes:
+      - ./src:/app
+    env_file: .env
     depends_on:
       - redis
 
   celery-beat:
     build:
       context: .
+    command: celery -A config beat -l info
+    volumes:
+      - ./src:/app
+    env_file: .env
     depends_on:
       - celery
 
