@@ -1,8 +1,8 @@
+from django.db.models import Sum, Q
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.contrib.auth import get_user_model
 
-from expense_tracker.authentication.models import Profile
 from expense_tracker.core.models import Category, Transaction
 from expense_tracker.core.constants import DEFAULT_CATEGORIES
 
@@ -16,9 +16,7 @@ def create_default_categories(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Transaction)
 def change_balance(sender, instance, created, **kwargs):
-    profile = Profile.objects.get(user=instance.user)
-    transactions = Transaction.objects.filter(user=instance.user)
-    e_transactions = sum(transactions.filter(type='E').values_list('amount', flat=True))
-    i_transactions = sum(transactions.filter(type='I').values_list('amount', flat=True))
-    profile.balance = i_transactions - e_transactions
-    profile.save()
+    transaction_amount = Transaction.objects.filter(user=instance.user).aggregate(
+        i_transaction_sum=Sum('amount', filter=Q(type='I')), e_transaction_sum=Sum('amount', filter=Q(type='E')))
+    instance.user.profile.balance = transaction_amount['i_transaction_sum'] - transaction_amount['e_transaction_sum']
+    instance.user.profile.save()
